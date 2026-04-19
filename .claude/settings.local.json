@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npm install *)",
+      "Bash(mv -n frontend/* ./)",
+      "Bash(rm -rf frontend)",
+      "Bash(uvicorn examples.web_demo:app --host 0.0.0.0 --port 8000 --reload)",
+      "Bash(npm run *)"
+    ]
+  }
+}
