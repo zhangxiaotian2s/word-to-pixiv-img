@@ -24,6 +24,7 @@
 │   ├── text_rendering/  # 文字渲染
 │   ├── models/          # 数据类型和异常
 │   └── utils/           # 工具函数
+├── frontend/            # Vue.js 前端界面
 ├── outputs/             # 生成图片输出
 ├── fonts/               # 自定义字体（可选）
 ├── tests/               # 测试
@@ -92,11 +93,21 @@ python examples/simple_cli.py "星空山顶" --position auto
 
 ### Web 界面
 
+**后端 API**:
 ```bash
 uvicorn examples.web_demo:app --reload --port 8000
 ```
 
-访问 http://localhost:8000/docs 可以在线测试。
+访问 http://localhost:8000/docs 可以在线测试 API。
+
+**前端界面**:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+打开浏览器访问 Vite 显示的本地地址（通常是 http://localhost:5173）即可使用完整的交互界面。
 
 ### 代码中使用
 
@@ -176,7 +187,17 @@ pytest tests/test_e2e.py -v
 | `樱花飘落的公园小路` | 生成樱花公园背景，底部添加文字 |
 | `雨夜中的日本车站` | 生成雨夜车站背景，文字渐变叠加 |
 
+## 功能特性
+
+- [x] 提示词自动优化增强
+- [x] Doubao 文生图 API 集成
+- [x] 智能文字排版与美化（半透明渐变背景 + 描边 + 投影）
+- [x] 多种文字位置选择（底部/顶部/居中/智能自动）
+- [x] 根据文字意境自动选择字体风格
+- [x] 支持自定义字体，多种回退机制
+- [x] RESTful API + 现代化 Vue 前端界面
+- [x] 完整单元测试覆盖
+
 ## 许可证
 
 MIT
-# word-to-pixiv-img
