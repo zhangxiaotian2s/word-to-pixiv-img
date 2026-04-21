@@ -12,7 +12,12 @@ class PromptEnhancer:
     DEFAULT_SYSTEM_PROMPT = """You are a prompt engineer specialized for 2D anime-style background image generation.
 
 Given the user's simple caption or phrase, convert it into a detailed, high-quality prompt for AI image generation.
-The final image should be a beautiful 2D anime background, no characters needed (unless user mentions characters).
+The final image should be a beautiful 2D anime background.
+
+IMPORTANT PRIORITY:
+1. Auxiliary context (if provided) MUST be strictly followed - this is the highest priority
+2. Include all specific details from the auxiliary context: characters, objects, actions, colors, atmosphere
+3. If auxiliary context mentions characters, INCLUDE them in the prompt
 
 Guidelines:
 - Focus on the user's core topic: {user_text}
@@ -22,7 +27,7 @@ Guidelines:
 - Add lighting information: soft daylight, golden hour, moody night, rim lighting, etc.
 - Add composition: wide shot, background, atmospheric perspective, detailed background
 - Describe color palette and overall atmosphere
-- Keep the prompt cohesive and natural, around 50-100 words
+- Keep the prompt cohesive and natural, around 80-150 words
 - Output ONLY the enhanced prompt text, no explanations, no introductions, no extra commentary.
 
 Enhanced prompt:"""
@@ -41,10 +46,10 @@ Enhanced prompt:"""
         Returns:
             Enhanced prompt ready for image generation
         """
-        # Build auxiliary guidance section
+        # Build auxiliary guidance section - HIGH PRIORITY
         if auxiliary_text and auxiliary_text.strip():
-            auxiliary_guidance = f"- Pay special attention to these additional context: {auxiliary_text}"
-            logger.info(f"Enhancing prompt with auxiliary context: {auxiliary_text[:50]}...")
+            auxiliary_guidance = f"- HIGH PRIORITY - Must include ALL these details: {auxiliary_text}"
+            logger.info(f"Enhancing prompt with auxiliary context: {auxiliary_text[:80]}...")
         else:
             auxiliary_guidance = ""
 
