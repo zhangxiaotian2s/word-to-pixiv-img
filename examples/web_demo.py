@@ -49,7 +49,12 @@ def get_pipeline() -> AnimeBackgroundPipeline:
 
 class GenerateRequest(BaseModel):
     """Generate request body."""
-    text: str = Field(..., description="Text to convert to image", min_length=1, max_length=500)
+    text: str = Field(..., description="Text to convert to image (displayed on image)", min_length=1, max_length=500)
+    auxiliary_text: Optional[str] = Field(
+        None,
+        description="Auxiliary context text to guide image generation (not displayed on image)",
+        max_length=1000,
+    )
     position: Optional[str] = Field(
         None,
         description="Text position: bottom, top, center, auto",
@@ -86,6 +91,7 @@ async def generate(request: GenerateRequest):
 
     result = pipe.generate(
         user_text=request.text,
+        auxiliary_text=request.auxiliary_text,
         text_style=text_style if any([request.position, request.font_size, request.auto_font is not None]) else None,
         width=request.width,
         height=request.height,

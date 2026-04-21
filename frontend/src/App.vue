@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import axios from 'axios'
 
 const text = ref('')
+const auxiliaryText = ref('')
 const position = ref('bottom')
 const width = ref(2048)
 const height = ref(2048)
@@ -42,6 +43,7 @@ async function generateImage() {
   try {
     const response = await axios.post('/api/generate', {
       text: text.value.trim(),
+      auxiliary_text: auxiliaryText.value.trim() || undefined,
       position: position.value,
       width: Number(width.value),
       height: Number(height.value),
@@ -88,11 +90,21 @@ function downloadImage() {
     <main class="main">
       <div class="card input-card">
         <div class="form-group">
-          <label for="text">输入文案</label>
+          <label for="text">输入文案 <span class="label-hint">（会显示在图片上）</span></label>
           <textarea
             id="text"
             v-model="text"
             placeholder="在这里输入你的文案... 例如：樱花飘落的公园小路"
+            rows="3"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="auxiliaryText">辅助描述 <span class="label-hint">（不会显示在图片上，仅帮助 AI 理解画面）</span></label>
+          <textarea
+            id="auxiliaryText"
+            v-model="auxiliaryText"
+            placeholder="描述你想要的画面氛围、场景细节、风格等... 例如：春天早晨，阳光透过树叶，粉色樱花，浪漫氛围"
             rows="3"
           />
         </div>
@@ -253,6 +265,12 @@ function downloadImage() {
   color: #333;
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
+}
+
+.label-hint {
+  font-weight: 400;
+  color: #6b7280;
+  font-size: 0.85rem;
 }
 
 textarea {

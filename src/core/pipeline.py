@@ -61,6 +61,7 @@ class AnimeBackgroundPipeline:
     def generate(
         self,
         user_text: str,
+        auxiliary_text: Optional[str] = None,
         text_style: Optional[TextStyle] = None,
         width: Optional[int] = None,
         height: Optional[int] = None,
@@ -70,7 +71,8 @@ class AnimeBackgroundPipeline:
         """Run the full generation pipeline.
 
         Args:
-            user_text: User input text
+            user_text: User input text (displayed on image)
+            auxiliary_text: Optional auxiliary context to guide image generation (not displayed)
             text_style: Optional custom text style
             width: Optional custom image width
             height: Optional custom image height
@@ -85,8 +87,8 @@ class AnimeBackgroundPipeline:
             logger.info(f"Starting generation for text: {user_text[:50]}...")
             cleaned_text = validate_user_text(user_text)
 
-            # Step 2: Enhance prompt
-            enhanced_prompt = self.prompt_enhancer.enhance(cleaned_text)
+            # Step 2: Enhance prompt (with auxiliary text if provided)
+            enhanced_prompt = self.prompt_enhancer.enhance(cleaned_text, auxiliary_text)
 
             # Step 3: Generate image
             if width and height:
@@ -107,6 +109,7 @@ class AnimeBackgroundPipeline:
 
             return GenerationResult(
                 original_text=cleaned_text,
+                auxiliary_text=auxiliary_text,
                 enhanced_prompt=enhanced_prompt,
                 image_path=image_path,
                 success=True,
@@ -116,6 +119,7 @@ class AnimeBackgroundPipeline:
             logger.error(f"Generation failed: {str(e)}", exc_info=True)
             return GenerationResult(
                 original_text=user_text,
+                auxiliary_text=auxiliary_text,
                 enhanced_prompt="",
                 success=False,
                 error_message=str(e),

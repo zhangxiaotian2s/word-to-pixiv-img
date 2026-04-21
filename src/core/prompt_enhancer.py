@@ -16,6 +16,7 @@ The final image should be a beautiful 2D anime background, no characters needed 
 
 Guidelines:
 - Focus on the user's core topic: {user_text}
+{auxiliary_guidance}
 - Describe the scene in detail: location, environment, weather, time of day
 - Add art style keywords: 2D anime, high detail, digital art, Pixiv style, high quality
 - Add lighting information: soft daylight, golden hour, moody night, rim lighting, etc.
@@ -30,21 +31,37 @@ Enhanced prompt:"""
         self.doubao_client = doubao_client
         self.system_prompt_template = system_prompt or self.DEFAULT_SYSTEM_PROMPT
 
-    def enhance(self, user_text: str) -> str:
+    def enhance(self, user_text: str, auxiliary_text: Optional[str] = None) -> str:
         """Enhance user text to high-quality anime prompt.
 
         Args:
-            user_text: User input text
+            user_text: User input text (will be overlaid on image)
+            auxiliary_text: Optional auxiliary context to guide image generation (not displayed)
 
         Returns:
             Enhanced prompt ready for image generation
         """
-        system_prompt = self.system_prompt_template.format(user_text=user_text)
+        # Build auxiliary guidance section
+        if auxiliary_text and auxiliary_text.strip():
+            auxiliary_guidance = f"- Pay special attention to these additional context: {auxiliary_text}"
+            logger.info(f"Enhancing prompt with auxiliary context: {auxiliary_text[:50]}...")
+        else:
+            auxiliary_guidance = ""
+
+        system_prompt = self.system_prompt_template.format(
+            user_text=user_text,
+            auxiliary_guidance=auxiliary_guidance,
+        )
         logger.info(f"Enhancing prompt for: {user_text[:50]}...")
+
+        # Combine user text and auxiliary text for better generation
+        combined_message = user_text
+        if auxiliary_text and auxiliary_text.strip():
+            combined_message = f"{user_text}\n\nAdditional context: {auxiliary_text}"
 
         enhanced_prompt = self.doubao_client.chat_completion(
             system_prompt=system_prompt,
-            user_message=user_text,
+            user_message=combined_message,
         )
 
         # Clean and validate

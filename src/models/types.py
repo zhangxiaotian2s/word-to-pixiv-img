@@ -55,5 +55,6 @@ class GenerationResult:
     original_text: str
     enhanced_prompt: str
     image_path: Optional[Path] = None
+    auxiliary_text: Optional[str] = None
     success: bool = True
     error_message: Optional[str] = None
