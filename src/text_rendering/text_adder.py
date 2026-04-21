@@ -37,6 +37,8 @@ class TextAdder:
     ) -> List[str]:
         """Wrap text to fit within max_width.
 
+        Optimized for Chinese text - wraps by character if needed.
+
         Args:
             text: Text to wrap
             font: Font object
@@ -45,27 +47,73 @@ class TextAdder:
         Returns:
             List of lines
         """
-        # Split by newlines first
         lines = []
         for paragraph in text.split("\n"):
-            words = paragraph.split()
-            if not words:
+            if not paragraph:
                 lines.append("")
                 continue
 
-            current_line = words[0]
-            for word in words[1:]:
-                test_line = current_line + " " + word
+            current_line = ""
+            for char in paragraph:
+                test_line = current_line + char
                 bbox = font.getbbox(test_line)
                 w = bbox[2] - bbox[0]
                 if w <= max_width:
                     current_line = test_line
                 else:
-                    lines.append(current_line)
-                    current_line = word
-            lines.append(current_line)
+                    if current_line:
+                        lines.append(current_line)
+                    current_line = char
+            if current_line:
+                lines.append(current_line)
 
         return lines
+
+    def _calculate_optimal_font_size(
+        self,
+        text: str,
+        image_width: int,
+        image_height: int,
+        min_size: int = 20,
+        max_size: int = 80,
+        padding_ratio: float = 0.15,
+    ) -> int:
+        """Calculate optimal font size based on image dimensions and text length.
+
+        Args:
+            text: Text content
+            image_width: Image width in pixels
+            image_height: Image height in pixels
+            min_size: Minimum font size
+            max_size: Maximum font size
+            padding_ratio: Percentage of image to use as padding
+
+        Returns:
+            Optimal font size
+        """
+        # Use 85% of image width for text area (minus padding)
+        max_text_width = int(image_width * (1 - padding_ratio * 2))
+
+        # Estimate character count (adjust for Chinese characters which are wider)
+        char_count = len(text)
+        if char_count == 0:
+            return max_size
+
+        # Calculate target width per character (use 1.3x as width estimate for Chinese)
+        target_chars_per_line = min(char_count, 15)  # Max ~15 chars per line for readability
+        estimated_char_width = max_text_width / target_chars_per_line
+
+        # Font size roughly equals character width (adjusted for font metrics)
+        estimated_size = int(estimated_char_width * 0.9)
+
+        # Also consider image height - don't make text too tall
+        max_height_based = int(image_height * 0.12)  # Max 12% of image height
+
+        optimal_size = min(estimated_size, max_height_based, max_size)
+        optimal_size = max(optimal_size, min_size)
+
+        logger.debug(f"Optimal font size calculated: {optimal_size} (text length: {char_count})")
+        return optimal_size
 
     def _calculate_text_metrics(
         self,
@@ -177,8 +225,19 @@ class TextAdder:
         """
         style = style or TextStyle()
 
-        # Get defaults from settings are overridden
-        font_size = style.font_size or settings.default_font_size
+        # Wrap text in smart quotes
+        quoted_text = f"「{text}」"
+
+        # Get defaults from settings or use smart defaults
+        w, h = image.size
+        use_smart_size = style.font_size is None
+
+        if use_smart_size:
+            # Calculate optimal font size based on image and text length
+            font_size = self._calculate_optimal_font_size(quoted_text, w, h)
+        else:
+            font_size = style.font_size
+
         text_color = self._hex_to_rgba(style.text_color or settings.default_text_color)
         stroke_color = self._hex_to_rgba(style.stroke_color or settings.default_stroke_color)
         stroke_width = style.stroke_width or settings.default_stroke_width
@@ -196,14 +255,22 @@ class TextAdder:
         # Work on copy
         result = image.copy()
         draw = ImageDraw.Draw(result)
-        w, h = result.size
 
         # Calculate maximum text width
         max_text_width = w - padding * 2
 
-        # Wrap text
-        lines = self._wrap_text(text, font, max_text_width)
+        # Wrap text using quoted version
+        lines = self._wrap_text(quoted_text, font, max_text_width)
         text_width, text_total_height, line_height = self._calculate_text_metrics(lines, font)
+
+        # If using smart sizing and text would take >35% of image height, reduce size
+        if use_smart_size and text_total_height > h * 0.35 and font_size > 24:
+            new_size = int(font_size * 0.8)
+            logger.debug(f"Text too tall, reducing font size from {font_size} to {new_size}")
+            font = self.font_loader.get_font(new_size, style.font_path) if not style.auto_font else \
+                   self.font_loader.get_font_for_text(text, new_size)
+            lines = self._wrap_text(quoted_text, font, max_text_width)
+            text_width, text_total_height, line_height = self._calculate_text_metrics(lines, font)
 
         # Get starting Y position
         y_start = self._get_y_position(
