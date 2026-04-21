@@ -51,7 +51,10 @@ class FontLoader:
             Best matching font
         """
         font_filename = self.auto_selector.get_font_filename(text)
-        logger.info(f"Auto-selected font '{font_filename}' for '{text[:30]}...'")
+        if font_filename:
+            logger.info(f"Auto-selected font '{font_filename}' for '{text[:30]}...'")
+        else:
+            logger.info(f"No matching font found for '{text[:30]}...', using fallback")
         return self.get_font(size, font_filename)
 
     def get_font(self, size: int, font_filename: Optional[str] = None) -> ImageFont.FreeTypeFont:
