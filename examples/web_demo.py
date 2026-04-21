@@ -18,6 +18,7 @@ from pathlib import Path
 from src.config.settings import settings
 from src.core.pipeline import AnimeBackgroundPipeline
 from src.models.types import GenerationResult, TextStyle
+from src.utils.logging import logger
 
 
 app = FastAPI(
@@ -78,6 +79,7 @@ async def root():
 @app.post("/generate")
 async def generate(request: GenerateRequest):
     """Generate anime background image from text."""
+    logger.info(f"API received request - text: {request.text[:50]}..., auxiliary_text: {repr(request.auxiliary_text[:80] if request.auxiliary_text else None)}...")
     pipe = get_pipeline()
 
     # Build text style
